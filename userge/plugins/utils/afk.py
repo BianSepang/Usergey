@@ -47,10 +47,15 @@ async def active_afk(message: Message) -> None:
     global REASON, IS_AFK, TIME  # pylint: disable=global-statement
     IS_AFK = True
     TIME = time.time()
-    REASON = message.input_str
+    string = message.input_str
+    if string:
+        REASON = string
+        await CHANNEL.log(f"You went AFK! : `{string}`")
+        await message.edit(f"`You went AFK!`\nReason : `{string}`")
+    else:
+        await CHANNEL.log("You went AFK!")
+        await message.edit("`You went AFK!`")
     await asyncio.gather(
-        CHANNEL.log(f"You went AFK! : `{REASON}`"),
-        message.edit("`You went AFK!`", del_in=1),
         AFK_COLLECTION.drop(),
         SAVED_SETTINGS.update_one(
             {'_id': 'AFK'}, {"$set": {'on': True, 'data': REASON, 'time': TIME}}, upsert=True))
@@ -109,12 +114,16 @@ async def handle_afk_incomming(message: Message) -> None:
     await asyncio.gather(*coro_list)
 
 
-@userge.on_filters(IS_AFK_FILTER & filters.outgoing, group=-1, allow_via_bot=False)
+@userge.on_cmd("unafk", about={
+    'header': "Get back from AFK State",
+    'description': "Makes yous return from your AFK State",
+    'usage': "{tr}unafk"}, allow_channels=False)
 async def handle_afk_outgoing(message: Message) -> None:
     """ handle outgoing messages when you afk """
     global IS_AFK  # pylint: disable=global-statement
     IS_AFK = False
     afk_time = time_formatter(round(time.time() - TIME))
+    await message.delete()
     replied: Message = await message.reply("`I'm no longer AFK!`", log=__name__)
     coro_list = []
     if USERS:
@@ -130,7 +139,7 @@ async def handle_afk_outgoing(message: Message) -> None:
                 g_msg += f"👥 {men} ✉️ **{gcount}**\n"
                 g_count += gcount
         coro_list.append(replied.edit(
-            f"`You recieved {p_count + g_count} messages while you were away. "
+            f"`You received {p_count + g_count} messages while you were away. "
             f"Check log for more details.`\n\n**AFK time** : __{afk_time}__", del_in=3))
         out_str = f"You've recieved **{p_count + g_count}** messages " + \
             f"from **{len(USERS)}** users while you were away!\n\n**AFK time** : __{afk_time}__\n"
