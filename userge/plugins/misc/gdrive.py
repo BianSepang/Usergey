@@ -253,9 +253,9 @@ class _GDrive:
                         "**ETA** : `{}`"
                     self._progress = tmp.format(
                         "".join((Config.FINISHED_PROGRESS_STR
-                                 for i in range(math.floor(percentage / 5)))),
+                                 for _ in range(math.floor(percentage / 5)))),
                         "".join((Config.UNFINISHED_PROGRESS_STR
-                                 for i in range(20 - math.floor(percentage / 5)))),
+                                 for _ in range(20 - math.floor(percentage / 5)))),
                         round(percentage, 2),
                         file_name,
                         humanbytes(f_size),
@@ -350,9 +350,9 @@ class _GDrive:
                         "**ETA** : `{}`"
                     self._progress = tmp.format(
                         "".join((Config.FINISHED_PROGRESS_STR
-                                 for i in range(math.floor(percentage / 5)))),
+                                 for _ in range(math.floor(percentage / 5)))),
                         "".join((Config.UNFINISHED_PROGRESS_STR
-                                 for i in range(20 - math.floor(percentage / 5)))),
+                                 for _ in range(20 - math.floor(percentage / 5)))),
                         round(percentage, 2),
                         name,
                         humanbytes(f_size),
@@ -441,9 +441,9 @@ class _GDrive:
             "**Completed** : `{}/{}`"
         self._progress = tmp.format(
             "".join((Config.FINISHED_PROGRESS_STR
-                     for i in range(math.floor(percentage / 5)))),
+                     for _ in range(math.floor(percentage / 5)))),
             "".join((Config.UNFINISHED_PROGRESS_STR
-                     for i in range(20 - math.floor(percentage / 5)))),
+                     for _ in range(20 - math.floor(percentage / 5)))),
             round(percentage, 2),
             self._completed,
             self._list)
@@ -958,7 +958,10 @@ async def gsetup_(message: Message):
     """ setup creds """
     link = "https://theuserge.github.io/deployment.html#3-g_drive_client_id--g_drive_client_secret"
     if Config.G_DRIVE_CLIENT_ID and Config.G_DRIVE_CLIENT_SECRET:
-        await Worker(message).setup()
+        if message.chat.id == Config.LOG_CHANNEL_ID:
+            await Worker(message).setup()
+        else:
+            await message.err("try in log channel")
     else:
         await message.edit(
             "`G_DRIVE_CLIENT_ID` and `G_DRIVE_CLIENT_SECRET` not found!\n"
